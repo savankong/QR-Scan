@@ -15,6 +15,8 @@ import {
 import { layoutQr, type QrLayout } from './qr';
 import { normalizeSiteUrl, isPrivateSite } from './site';
 import { buildVCard } from './vcard';
+import { defaultSettings, sanitizeSettings } from './settings';
+import { parseRoute } from '../hooks';
 
 function link(type: LinkType, value: string, label = '') {
   return { ...newLink(type), value, label };
@@ -148,6 +150,48 @@ describe('vCard', () => {
     const lines = card.split('\r\n');
     expect(lines.every((l) => l.length <= 75)).toBe(true);
     expect(card.replace(/\r\n /g, '')).toContain(`PHOTO;ENCODING=b;TYPE=JPEG:${base64}`);
+  });
+});
+
+describe('contact QR fields', () => {
+  it('leaves out hidden fields and labels the card link', () => {
+    const p = sample();
+    const card = buildVCard(p, {
+      compact: true,
+      hidden: ['org', 'email', `link:${p.links[1].id}`],
+      cardUrl: 'https://card.savankong.com/',
+    });
+    expect(card).toContain('N:Kong;Savan;;;');
+    expect(card).toContain('TEL;TYPE=CELL:');
+    expect(card).not.toContain('ORG:');
+    expect(card).not.toContain('TITLE:');
+    expect(card).not.toContain('EMAIL');
+    expect(card).not.toContain('github.com');
+    expect(card).toContain('URL:https://www.linkedin.com/in/savan-kong\r\n');
+    expect(card).toContain('item1.URL:https://card.savankong.com/\r\nitem1.X-ABLabel:My card\r\n');
+    expect(decode(layoutQr(card))).toBe(card);
+  });
+
+  it('drops the card link when it is switched off', () => {
+    const card = buildVCard(sample(), { compact: true, hidden: ['card'], cardUrl: 'https://card.savankong.com/' });
+    expect(card).not.toContain('My card');
+  });
+
+  it('defaults to saving the contact and sanitizes the field list', () => {
+    expect(defaultSettings().qrMode).toBe('vcard');
+    expect(sanitizeSettings({}).vcardHidden).toEqual([]);
+    expect(sanitizeSettings({ vcardHidden: ['phone', 'phone', 3, 'x'.repeat(50)] }).vcardHidden).toEqual(['phone']);
+  });
+});
+
+describe('routes', () => {
+  it('shows the card at the root and the editor at #/edit', () => {
+    expect(parseRoute('')).toEqual({ view: 'published' });
+    expect(parseRoute('#/')).toEqual({ view: 'published' });
+    expect(parseRoute('#/card')).toEqual({ view: 'published' });
+    expect(parseRoute('#/edit')).toEqual({ view: 'studio', tab: 'profile' });
+    expect(parseRoute('#/qr')).toEqual({ view: 'studio', tab: 'qr' });
+    expect(parseRoute('#/c/abc')).toEqual({ view: 'packed', data: 'abc' });
   });
 });
 

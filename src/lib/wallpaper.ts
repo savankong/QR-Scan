@@ -82,8 +82,8 @@ export const DEFAULT_WALLPAPER: WallpaperSettings = {
   dim: 0.25,
   layout: 'card',
   y: 0.63,
-  scale: 0.5,
-  caption: 'Scan to connect',
+  scale: 0.55,
+  caption: 'Scan to save my contact',
 };
 
 export interface Scene {
@@ -173,60 +173,49 @@ function fitText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number):
 interface CardMetrics {
   pad: number;
   gap: number;
+  /** The name row: a small photo beside the name and title. Zero when there is no name. */
+  rowH: number;
   avatarR: number;
   nameSize: number;
   subSize: number;
   captionSize: number;
   width: number;
-  /** Includes the avatar overhanging the top edge. */
   height: number;
 }
 
 function cardMetrics(qrPx: number, s: Scene): CardMetrics {
   const module = qrPx / s.qr.size;
   // Keep at least three modules of white around the code for scanners.
-  const pad = Math.max(qrPx * 0.1, module * 3);
-  const gap = Math.max(qrPx * 0.065, module * 2.5);
-  const avatarR = qrPx * 0.15;
-  const nameSize = qrPx * 0.085;
-  const subSize = qrPx * 0.05;
-  const captionSize = qrPx * 0.048;
-  let height = avatarR * 2 + qrPx * 0.05;
-  if (s.profile.name.trim()) height += nameSize * 1.3;
-  if (subtitle(s.profile)) height += subSize * 1.55;
-  height += gap + qrPx;
-  height += s.settings.caption.trim() ? gap * 0.7 + captionSize * 1.2 + pad * 0.8 : pad;
-  return { pad, gap, avatarR, nameSize, subSize, captionSize, width: qrPx + pad * 2, height };
+  const pad = Math.max(qrPx * 0.085, module * 3);
+  const gap = Math.max(qrPx * 0.056, module * 2.5);
+  const avatarR = qrPx * 0.09;
+  const nameSize = qrPx * 0.08;
+  const subSize = qrPx * 0.056;
+  const captionSize = qrPx * 0.065;
+  const text = s.profile.name.trim() ? nameSize * 1.25 + (subtitle(s.profile) ? subSize * 1.35 : 0) : 0;
+  const rowH = text ? Math.max(avatarR * 2, text) : 0;
+  let height = pad * 0.85 + (rowH ? rowH + gap : 0) + qrPx;
+  height += s.settings.caption.trim() ? gap + captionSize * 1.2 + pad * 0.75 : pad;
+  return { pad, gap, rowH, avatarR, nameSize, subSize, captionSize, width: qrPx + pad * 2, height };
 }
 
 function drawAvatar(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, s: Scene) {
-  ctx.save();
-  ctx.shadowColor = 'rgba(15, 23, 42, 0.18)';
-  ctx.shadowBlur = r * 0.3;
-  ctx.shadowOffsetY = r * 0.06;
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-
-  const inner = r * 0.9;
   if (s.photo) {
-    drawCirclePhoto(ctx, s.photo, cx, cy, inner);
+    drawCirclePhoto(ctx, s.photo, cx, cy, r);
     return;
   }
-  const g = ctx.createLinearGradient(cx - inner, cy - inner, cx + inner, cy + inner);
+  const g = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
   g.addColorStop(0, mix(s.profile.accent, '#ffffff', 0.15));
   g.addColorStop(1, mix(s.profile.accent, '#000000', 0.2));
   ctx.fillStyle = g;
   ctx.beginPath();
-  ctx.arc(cx, cy, inner, 0, Math.PI * 2);
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.fill();
   ctx.fillStyle = '#ffffff';
-  ctx.font = fontStack(700, inner * 0.78);
+  ctx.font = fontStack(700, r * 0.78);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(initials(s.profile.name) || '?', cx, cy + inner * 0.04);
+  ctx.fillText(initials(s.profile.name) || '?', cx, cy + r * 0.04);
 }
 
 function qrPaint(s: Scene) {
@@ -239,55 +228,85 @@ function qrPaint(s: Scene) {
   };
 }
 
+/** Draws a small QR glyph, the same mark the app shows beside its captions. */
+function drawQrGlyph(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string) {
+  const u = size / 7;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = u * 0.75;
+  for (const [gx, gy] of [
+    [0, 0],
+    [4, 0],
+    [0, 4],
+  ]) {
+    ctx.beginPath();
+    ctx.roundRect(x + gx * u + u * 0.4, y + gy * u + u * 0.4, u * 2.2, u * 2.2, u * 0.4);
+    ctx.stroke();
+  }
+  ctx.fillRect(x + 4.4 * u, y + 4.4 * u, u, u);
+  ctx.fillRect(x + 5.8 * u, y + 5.8 * u, u, u);
+  ctx.restore();
+}
+
 function drawCard(ctx: CanvasRenderingContext2D, s: Scene, qrPx: number): Placement {
   const { width: W, height: H } = s;
   const m = cardMetrics(qrPx, s);
   const top = Math.min(Math.max(s.settings.y * H - m.height / 2, H * 0.03), H * 0.97 - m.height);
   const cx = W / 2;
   const cardX = cx - m.width / 2;
-  const cardY = top + m.avatarR;
-  const cardH = m.height - m.avatarR;
 
   ctx.save();
-  ctx.shadowColor = 'rgba(2, 6, 23, 0.32)';
-  ctx.shadowBlur = qrPx * 0.14;
-  ctx.shadowOffsetY = qrPx * 0.035;
+  ctx.shadowColor = 'rgba(2, 6, 23, 0.4)';
+  ctx.shadowBlur = qrPx * 0.18;
+  ctx.shadowOffsetY = qrPx * 0.07;
   ctx.fillStyle = '#ffffff';
   ctx.beginPath();
-  ctx.roundRect(cardX, cardY, m.width, cardH, qrPx * 0.09);
+  ctx.roundRect(cardX, top, m.width, m.height, qrPx * 0.12);
   ctx.fill();
   ctx.restore();
 
-  drawAvatar(ctx, cx, cardY, m.avatarR, s);
-
-  let y = cardY + m.avatarR + qrPx * 0.05;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'alphabetic';
-  const maxText = m.width - m.pad * 1.5;
-  if (s.profile.name.trim()) {
+  let y = top + m.pad * 0.85;
+  const left = cx - qrPx / 2;
+  if (m.rowH) {
+    const mid = y + m.rowH / 2;
+    drawAvatar(ctx, left + m.avatarR, mid, m.avatarR, s);
+    const textX = left + m.avatarR * 2 + qrPx * 0.047;
+    const maxText = left + qrPx - textX;
+    const sub = subtitle(s.profile);
+    const block = m.nameSize * 1.25 + (sub ? m.subSize * 1.35 : 0);
+    let ty = mid - block / 2;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = '#0f172a';
     ctx.font = fontStack(700, m.nameSize);
-    ctx.fillText(fitText(ctx, s.profile.name.trim(), maxText), cx, y + m.nameSize);
-    y += m.nameSize * 1.3;
+    ctx.fillText(fitText(ctx, s.profile.name.trim(), maxText), textX, ty + m.nameSize * 0.98);
+    ty += m.nameSize * 1.25;
+    if (sub) {
+      ctx.fillStyle = '#475569';
+      ctx.font = fontStack(500, m.subSize);
+      ctx.fillText(fitText(ctx, sub, maxText), textX, ty + m.subSize * 1.05);
+    }
+    y += m.rowH + m.gap;
   }
-  const sub = subtitle(s.profile);
-  if (sub) {
-    ctx.fillStyle = '#64748b';
-    ctx.font = fontStack(500, m.subSize);
-    ctx.fillText(fitText(ctx, sub, maxText), cx, y + m.subSize * 1.15);
-    y += m.subSize * 1.55;
-  }
-  y += m.gap;
-  drawQr(ctx, s.qr, cx - qrPx / 2, y, qrPx, qrPaint(s));
+
+  drawQr(ctx, s.qr, left, y, qrPx, qrPaint(s));
   y += qrPx;
 
   const caption = s.settings.caption.trim();
   if (caption) {
-    y += m.gap * 0.7;
-    ctx.fillStyle = '#64748b';
-    ctx.font = fontStack(600, m.captionSize);
+    y += m.gap;
+    ctx.font = fontStack(700, m.captionSize);
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(fitText(ctx, caption, maxText), cx, y + m.captionSize);
+    ctx.textAlign = 'left';
+    const glyph = m.captionSize * 1.05;
+    const space = m.captionSize * 0.45;
+    const text = fitText(ctx, caption, m.width - m.pad * 1.5 - glyph - space);
+    const total = glyph + space + ctx.measureText(text).width;
+    const x0 = cx - total / 2;
+    drawQrGlyph(ctx, x0, y + m.captionSize * 0.05, glyph, '#2d3040');
+    ctx.fillStyle = '#2d3040';
+    ctx.fillText(text, x0 + glyph + space, y + m.captionSize * 0.95);
   }
   return { top: top / H, bottom: (top + m.height) / H };
 }

@@ -1,6 +1,6 @@
 # Fast-save design proposal
 
-Draft designs for making the contact save as fast as possible. They are **not built yet** and are waiting for the owner's approval. [HANDOFF.md](../../HANDOFF.md) summarizes them and lists the open decisions.
+Designs for making the contact save as fast as possible. The owner approved them on 2 October 2026, and they are built into the app. [HANDOFF.md](../../HANDOFF.md) has the current status.
 
 | File | Artboard |
 |---|---|

@@ -6,6 +6,10 @@ export interface VCardOptions {
   /** Compact cards go inside a QR code: no photo and no note, to keep the code scannable. */
   compact?: boolean;
   photo?: VCardPhoto | null;
+  /** Fields to leave out, as stored in `Settings.vcardHidden`. */
+  hidden?: readonly string[];
+  /** The card page, saved as a labelled "My card" URL so the photo and links stay one tap away. */
+  cardUrl?: string;
 }
 
 function escapeText(value: string): string {
@@ -37,24 +41,33 @@ export function photoFromDataUrl(dataUrl: string): VCardPhoto | null {
 export function buildVCard(p: Profile, options: VCardOptions = {}): string {
   const name = p.name.trim();
   const [given, family] = splitName(name);
+  const shown = (key: string) => !options.hidden?.includes(key);
   const lines = ['BEGIN:VCARD', 'VERSION:3.0'];
   lines.push(`N:${escapeText(family)};${escapeText(given)};;;`);
   lines.push(`FN:${escapeText(name || 'Contact')}`);
-  if (p.company.trim()) lines.push(`ORG:${escapeText(p.company.trim())}`);
-  if (p.headline.trim()) lines.push(`TITLE:${escapeText(p.headline.trim())}`);
-  if (p.phone.trim()) lines.push(`TEL;TYPE=CELL:${escapeText(p.phone.trim())}`);
-  if (p.email.trim()) lines.push(`EMAIL;TYPE=INTERNET:${escapeText(p.email.trim())}`);
+  if (shown('org') && p.company.trim()) lines.push(`ORG:${escapeText(p.company.trim())}`);
+  if (shown('org') && p.headline.trim()) lines.push(`TITLE:${escapeText(p.headline.trim())}`);
+  if (shown('phone') && p.phone.trim()) lines.push(`TEL;TYPE=CELL:${escapeText(p.phone.trim())}`);
+  if (shown('email') && p.email.trim()) lines.push(`EMAIL;TYPE=INTERNET:${escapeText(p.email.trim())}`);
 
   // "itemN." groups let iOS show a label such as "LinkedIn" next to each URL.
   // Compact cards skip the labels: every byte makes the QR code denser.
-  filledLinks(p).forEach((link, i) => {
+  let item = 0;
+  filledLinks(p).forEach((link) => {
+    if (!shown(`link:${link.id}`)) return;
     if (options.compact) {
       lines.push(`URL:${linkHref(link)}`);
       return;
     }
-    lines.push(`item${i + 1}.URL:${linkHref(link)}`);
-    lines.push(`item${i + 1}.X-ABLabel:${escapeText(linkLabel(link))}`);
+    item += 1;
+    lines.push(`item${item}.URL:${linkHref(link)}`);
+    lines.push(`item${item}.X-ABLabel:${escapeText(linkLabel(link))}`);
   });
+  if (options.cardUrl && shown('card')) {
+    item += 1;
+    lines.push(`item${item}.URL:${options.cardUrl}`);
+    lines.push(`item${item}.X-ABLabel:My card`);
+  }
 
   if (!options.compact) {
     const note = [p.bio.trim(), p.location.trim() && `Based in ${p.location.trim()}`].filter(Boolean).join('\n');

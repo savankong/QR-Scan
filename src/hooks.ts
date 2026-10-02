@@ -69,12 +69,16 @@ export type Tab = 'profile' | 'qr' | 'wallpaper';
 
 export type Route = { view: 'studio'; tab: Tab } | { view: 'packed'; data: string } | { view: 'published' };
 
+/**
+ * Visitors land on the bare address, so it shows the published card; the
+ * editor lives under #/edit. "#/card" is kept for links made before the move.
+ */
 export function parseRoute(hash: string): Route {
   const path = hash.replace(/^#\/?/, '');
   if (path.startsWith('c/')) return { view: 'packed', data: path.slice(2) };
-  if (path === 'card') return { view: 'published' };
+  if (path === 'edit') return { view: 'studio', tab: 'profile' };
   if (path === 'qr' || path === 'wallpaper') return { view: 'studio', tab: path };
-  return { view: 'studio', tab: 'profile' };
+  return { view: 'published' };
 }
 
 export function useRoute(): Route {

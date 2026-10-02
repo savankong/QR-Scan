@@ -16,7 +16,7 @@ import { currentSiteUrl, normalizeSiteUrl, packedCardUrl, publishedCardUrl } fro
 import { buildVCard } from './lib/vcard';
 
 const TABS: { id: Tab; label: string; href: string; icon: typeof UserRound }[] = [
-  { id: 'profile', label: 'Profile', href: '#/', icon: UserRound },
+  { id: 'profile', label: 'Profile', href: '#/edit', icon: UserRound },
   { id: 'qr', label: 'QR code', href: '#/qr', icon: QrCode },
   { id: 'wallpaper', label: 'Wallpaper', href: '#/wallpaper', icon: Smartphone },
 ];
@@ -34,7 +34,13 @@ function useQrTarget(profile: Profile, settings: Settings, site: string): QrTarg
     };
   }, [profile, instant]);
 
-  const vcard = useMemo(() => (settings.qrMode === 'vcard' ? buildVCard(profile, { compact: true }) : ''), [profile, settings.qrMode]);
+  const vcard = useMemo(
+    () =>
+      settings.qrMode === 'vcard'
+        ? buildVCard(profile, { compact: true, hidden: settings.vcardHidden, cardUrl: publishedCardUrl(site) })
+        : '',
+    [profile, settings.qrMode, settings.vcardHidden, site],
+  );
 
   if (settings.qrMode === 'vcard') return { text: vcard, url: null };
   if (!instant) {
@@ -82,7 +88,7 @@ function Studio({ tab }: { tab: Tab }) {
   return (
     <div className="app" style={style}>
       <header className="topbar">
-        <a className="brand" href="#/">
+        <a className="brand" href="#/edit">
           <span className="brand-mark" aria-hidden="true">
             <QrCode size={18} />
           </span>

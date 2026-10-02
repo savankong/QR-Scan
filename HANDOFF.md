@@ -10,46 +10,35 @@ The person who scans the QR code must be able to save Savan's contact **as quick
 
 | Area | State |
 |---|---|
-| App (v1) | Built, tested and pushed: profile editor, QR code tab, wallpaper maker and visitor card page. See [README.md](README.md). |
-| Tests | 18 unit tests (`npm test`) pass. 22 browser checks pass (see [Verify](#verify)). |
-| Hosting config | DigitalOcean App Platform static site, defined in [`.do/app.yaml`](.do/app.yaml). The GitHub Pages workflow was removed on purpose: hosting is DigitalOcean only. |
-| Deployment | **Not deployed yet.** The app spec passed DigitalOcean's dry run (`POST /v2/apps/propose`): name `qr-scan` is free, and it fits the account's free static-site slots (1 of 3 used). Creating the app was blocked by the previous session's safety check and needs the owner's explicit go-ahead. |
-| Domain | `card.savankong.com` was chosen. The spec already lists it. DNS for savankong.com is at **GoDaddy** (`ns69/ns70.domaincontrol.com`), and there's no `card` record yet. |
-| Redesign | Designs for "fastest save" are drafted ([docs/design/](docs/design/)) and **waiting for the owner's approval. Don't build them before that.** |
+| App | v1 plus the approved fast-save redesign: Straight to Contacts is the default QR mode, the card page is save-first, the QR tab has the two option cards and "In your contact" switches, and the wallpaper has a name row and "Scan to save my contact". See [README.md](README.md). |
+| Routing | The site root shows the published card. The editor is at `#/edit`. `#/card` still works for old links. |
+| Tests | 22 unit tests (`npm test`) and 23 browser checks (see [Verify](#verify)) pass. |
+| Hosting | DigitalOcean App Platform app `qr-scan` (id `d6123f88-f8c3-4356-af9e-d6236d8136d3`), spec in [`.do/app.yaml`](.do/app.yaml). Live at https://qr-scan-dwcyv.ondigitalocean.app. Pushes to `claude/qr-card-app` redeploy it. |
+| Domain | `card.savankong.com` is in the spec. DNS for savankong.com is at **GoDaddy**. The owner still needs to add **CNAME `card` → `qr-scan-dwcyv.ondigitalocean.app`**. DigitalOcean then issues the certificate. |
+| profile.json | Not published yet, so the root says "This card hasn't been published yet" and the "My card" link in the contact leads there. Publish it from the QR tab (Download profile.json → commit to `public/`). |
 
-## Open decisions (ask the owner)
+## Decisions made
 
-1. **Approve the designs.** In particular: should the QR code save the contact directly (Option A) by default, with the card page as the link people share (Option B)?
-2. **Go-ahead to create the DigitalOcean app.** Then give the owner the exact GoDaddy CNAME value.
-3. **What visitors see at `https://card.savankong.com/`.** Today the root opens the editor and the visitor card lives at `#/card` or `#/c/<data>`. For a clean link, visitors should probably get the card at the root and the editor should move to `#/edit`. This changes routing, so confirm it.
+1. Designs approved: Option A (vCard in the QR code) by default, Option B (card page) for shared links.
+2. Visitors get the card at the root, and the editor moved to `#/edit`.
+3. The DigitalOcean app was created on 2 October 2026.
 
-## The design proposal (docs/design)
+## Next steps
 
-These are artboards for the Claude Design canvas; [docs/design/README.md](docs/design/README.md) explains how to open them. The original canvas is private to the previous account, at https://claude.ai/artifact/7avqQoRMqxbCL1zGZaAmfZ. Its owner can share it from the page's Share menu.
+- Check the camera prompts, the `.vcf` save in Safari, and the share sheet on a real iPhone and Android.
+- The tap counts in the QR tab ("about 3 taps", "about 4 taps") are still estimates. Correct them after testing on real phones.
+- A full profile with every switch on makes a dense 73×73 code ("Dense, may scan slowly"). Consider which details to switch off by default once real-phone scans are tested.
+- When the work merges to `main`, change `branch` in `.do/app.yaml` and in the live app.
 
-- **Option A, Straight to Contacts (recommended for the wallpaper).** The QR code holds a compact vCard. The person scans, taps the camera prompt, and taps Create New Contact: about 3 taps, works offline, no page load. A QR code can't hold a photo, so the vCard includes a "My card" URL to the card page, where the photo and all links are.
-- **Option B, Card page first (best for shared links).** The QR code opens the card page, with **Save to Contacts** as the first and largest control. It takes about 4 taps and needs signal, but the saved contact includes the photo.
-- **Card page:** save-first layout, then a Call/Text/Email row, then links, then "Text Savan your number" (an `sms:` link so people can send their number back). After the person taps Save, an "Almost done" note says to tap *Create New Contact* (iPhone) or *Save* (Android).
-- **QR tab:** a picker between A and B with tap counts, "In your contact" switches to choose which fields go into the vCard (fewer fields make a simpler code), and the readability meter.
-- **Wallpaper:** a larger code, a name and photo row, and the caption "Scan to save my contact".
+## The design (docs/design)
 
-The tap counts are estimates. Nobody has checked the exact prompts on a real iPhone or Android.
-
-## Implementation plan once the designs are approved
-
-1. **Settings** (`src/lib/settings.ts`): default `qrMode` to `'vcard'`. Add a field selection for the vCard (title/company, phone, email, each link type, card link) and sanitize it.
-2. **vCard** (`src/lib/vcard.ts`): in compact mode, honor the field selection, and add the card-page URL with a short label such as `item1.URL` + `X-ABLabel:My card`. Keep an eye on the readability meter: a full profile is now about 77×77 modules, so trimming fields matters.
-3. **Card page** (`src/components/ProfileCard.tsx`): use the save-first layout from `docs/design/Card.dc.html`. **Build the vCard blob when the page loads**, not on tap: today `downloadContact` fetches the photo after the tap, which delays the save and can lose the browser's user-gesture allowance on iOS. Add the "Almost done" state and the "Text Savan your number" link.
-4. **QR tab** (`src/components/SharePanel.tsx`): use the option cards and field switches from `docs/design/OwnerQR.dc.html`.
-5. **Wallpaper** (`src/lib/wallpaper.ts`, `WallpaperStudio.tsx`): change the default caption to "Scan to save my contact", add the name and photo row, and make the default size a little larger.
-6. **Routing** (`src/hooks.ts` `parseRoute`, `src/App.tsx`): only after decision 3 above.
-7. Update the unit tests and the browser checks to match.
+The approved artboards are in [docs/design/](docs/design/), and [docs/design/README.md](docs/design/README.md) explains how to open them. The original canvas is private to the previous account: https://claude.ai/artifact/7avqQoRMqxbCL1zGZaAmfZ
 
 ## Deploying to DigitalOcean
 
 **Never commit an API token.** The previous session's token was pasted into chat and should be revoked (DigitalOcean → API → Tokens). Use a fresh token from an environment variable such as `DIGITALOCEAN_TOKEN`.
 
-Create the app with one of these, after the owner approves:
+The app already exists. To recreate it elsewhere, use one of these:
 
 - Dashboard: **Apps → Create App → GitHub → `savankong/QR-Scan`**, branch `claude/qr-card-app`, static site, build command `npm run build`, output directory `dist`.
 - doctl: `doctl apps create --spec .do/app.yaml`
@@ -72,7 +61,7 @@ npm test              # unit tests, including decoding generated QR codes with j
 npm run build
 npx vite preview --port 4173 &
 npm i --no-save playwright && npx playwright install chromium   # or use a global install
-node scripts/verify-browser.mjs
+node scripts/verify-browser.mjs   # CHROMIUM_PATH=/opt/pw-browsers/chromium in Claude's cloud container
 ```
 
 The browser script fills in a profile and decodes every QR code the app draws with jsQR, in each style and mode and on the wallpaper at 40% scale. It also checks the visitor page, the `.vcf` download, broken links and storage across tabs. Screenshots go to `.verify-shots/`.

@@ -57,6 +57,11 @@ export function PublicCard({ source }: { source: CardSource }) {
       {state.status === 'error' && (
         <div className="public-status">
           <p>{state.message}</p>
+          {source.kind === 'published' && (
+            <a className="btn btn-secondary btn-sm" href="#/edit">
+              Make or edit your card
+            </a>
+          )}
         </div>
       )}
       {state.status === 'ready' && <ProfileCard profile={state.profile} />}

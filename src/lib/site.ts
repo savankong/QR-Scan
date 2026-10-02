@@ -42,6 +42,7 @@ export function packedCardUrl(site: string, packed: string): string {
   return `${site}#/c/${packed}`;
 }
 
+/** The bare site address: the root shows the published card. */
 export function publishedCardUrl(site: string): string {
-  return `${site}#/card`;
+  return site;
 }

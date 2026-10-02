@@ -12,17 +12,23 @@ export interface Settings {
   dots: DotStyle;
   qrColor: 'accent' | 'black';
   centerPhoto: boolean;
+  /**
+   * Fields left out of the contact a scan saves: 'org', 'phone', 'email', 'card',
+   * or a link as `link:<id>`. Stored as exclusions so new details start included.
+   */
+  vcardHidden: string[];
   wallpaper: WallpaperSettings;
 }
 
 export function defaultSettings(): Settings {
   return {
-    qrMode: 'page',
-    linkStyle: 'instant',
+    qrMode: 'vcard',
+    linkStyle: 'short',
     siteUrl: '',
     dots: 'rounded',
     qrColor: 'accent',
     centerPhoto: false,
+    vcardHidden: [],
     wallpaper: { ...DEFAULT_WALLPAPER },
   };
 }
@@ -47,6 +53,9 @@ export function sanitizeSettings(raw: unknown): Settings {
     dots: pick(r.dots, ['square', 'rounded', 'dots'], d.dots),
     qrColor: pick(r.qrColor, ['accent', 'black'], d.qrColor),
     centerPhoto: typeof r.centerPhoto === 'boolean' ? r.centerPhoto : d.centerPhoto,
+    vcardHidden: Array.isArray(r.vcardHidden)
+      ? [...new Set(r.vcardHidden.filter((k): k is string => typeof k === 'string' && k.length <= 40))].slice(0, 40)
+      : d.vcardHidden,
     wallpaper: {
       device: pick(w.device, ['auto', ...DEVICES.map((x) => x.id)], dw.device),
       backdrop: pick(w.backdrop, ['accent', 'solid', 'image', ...BACKDROPS.map((b) => b.id)], dw.backdrop),

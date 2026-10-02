@@ -9,16 +9,15 @@ import {
   Image as ImageIcon,
   QrCode,
   Share,
-  Smartphone,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { mix } from '../lib/color';
 import { downloadContact } from '../lib/contact';
-import { exportProfile, initials, subtitle, type Profile } from '../lib/profile';
+import { exportProfile, filledLinks, initials, linkLabel, subtitle, type Profile } from '../lib/profile';
 import { drawQr, qrSvg, readability, type DotStyle, type QrLayout, type QrPaint } from '../lib/qr';
 import { canvasToBlob, copyText, downloadBlob, isTouchDevice, saveOrShareFile, shareData } from '../lib/share';
 import type { Settings } from '../lib/settings';
-import { currentSiteUrl, isPrivateSite } from '../lib/site';
+import { currentSiteUrl, isPrivateSite, publishedCardUrl } from '../lib/site';
 import { drawWallpaper } from '../lib/wallpaper';
 import { fetchPublished } from './PublicCard';
 import { Avatar, Hint, Section, Segmented, Toggle } from './ui';
@@ -49,7 +48,7 @@ function captionFor(settings: Settings) {
   return settings.qrMode === 'vcard' ? 'Scan to save my contact' : 'Scan to see my card';
 }
 
-function ReadabilityMeter({ layout, instant }: { layout: QrLayout; instant: boolean }) {
+function ReadabilityMeter({ layout, tip }: { layout: QrLayout; tip: string }) {
   const r = readability(layout);
   return (
     <div className="meter">
@@ -64,13 +63,7 @@ function ReadabilityMeter({ layout, instant }: { layout: QrLayout; instant: bool
           <span key={i} className={i <= 3 - r.level ? 'on' : ''} />
         ))}
       </div>
-      {r.level >= 2 && (
-        <p className="row-sub meter-tip">
-          {instant
-            ? 'A shorter bio or fewer links makes a simpler code. A short link is always simple.'
-            : 'Fewer links make a simpler code.'}
-        </p>
-      )}
+      {r.level >= 2 && <p className="row-sub meter-tip">{tip}</p>}
     </div>
   );
 }
@@ -141,6 +134,47 @@ function PublishPanel({ profile, site }: { profile: Profile; site: string }) {
   );
 }
 
+function ModeOption({
+  selected,
+  title,
+  badge,
+  detail,
+  onSelect,
+}: {
+  selected: boolean;
+  title: string;
+  badge?: string;
+  detail: string;
+  onSelect: () => void;
+}) {
+  return (
+    <button type="button" role="radio" aria-checked={selected} className="mode-option" onClick={onSelect}>
+      <span className="mode-radio" aria-hidden="true" />
+      <span className="mode-text">
+        <span className="mode-title">
+          {title}
+          {badge && <span className="mode-badge">{badge}</span>}
+        </span>
+        <span className="row-sub">{detail}</span>
+      </span>
+    </button>
+  );
+}
+
+/** The details a scan can save, keyed as in `Settings.vcardHidden`. Only filled-in ones are listed. */
+function contactFields(profile: Profile): { key: string; label: string; description?: string }[] {
+  const fields: { key: string; label: string; description?: string }[] = [];
+  if (profile.headline.trim() || profile.company.trim()) {
+    const both = profile.headline.trim() && profile.company.trim();
+    fields.push({ key: 'org', label: both ? 'Title and company' : profile.headline.trim() ? 'Title' : 'Company' });
+  }
+  if (profile.phone.trim()) fields.push({ key: 'phone', label: 'Phone' });
+  if (profile.email.trim()) fields.push({ key: 'email', label: 'Email' });
+  for (const link of filledLinks(profile)) fields.push({ key: `link:${link.id}`, label: linkLabel(link) });
+  fields.push({ key: 'card', label: 'Link to my card page', description: 'So they can see your photo later' });
+  return fields;
+}
+
 export function SharePanel({
   profile,
   settings,
@@ -174,6 +208,10 @@ export function SharePanel({
     '--accent-deep': mix(profile.accent, '#000000', 0.55),
   } as CSSProperties;
   const privateSite = isPrivateSite(site);
+  const hidden = settings.vcardHidden;
+  const cardInContact = !page && !hidden.includes('card');
+  const toggleField = (key: string, on: boolean) =>
+    set({ vcardHidden: on ? hidden.filter((k) => k !== key) : [...hidden, key] });
 
   async function copyLink() {
     if (!target?.url) return;
@@ -240,9 +278,13 @@ export function SharePanel({
     <div className="workspace">
       <div className="stage stage-share" style={stageStyle}>
         <div className="share-card">
-          <Avatar profile={profile} size={76} className="share-avatar" />
-          <p className={`share-name${profile.name.trim() ? '' : ' is-placeholder'}`}>{profile.name.trim() || 'Your name'}</p>
-          {sub && <p className="share-sub">{sub}</p>}
+          <div className="share-who">
+            <Avatar profile={profile} size={40} />
+            <span className="share-who-text">
+              <span className={`share-name${profile.name.trim() ? '' : ' is-placeholder'}`}>{profile.name.trim() || 'Your name'}</span>
+              {sub && <span className="share-sub">{sub}</span>}
+            </span>
+          </div>
           <div className="share-qr">
             {layout ? (
               <QrCanvas layout={layout} paint={paint} label={page ? `QR code that opens ${target?.url ?? ''}` : 'QR code with your contact card'} />
@@ -251,15 +293,20 @@ export function SharePanel({
             )}
           </div>
           <p className="share-caption">
-            <QrCode size={14} aria-hidden="true" />
+            <QrCode size={16} aria-hidden="true" />
             {captionFor(settings)}
           </p>
+          <div className="share-card-actions">
+            <a className="btn btn-primary" href="#/wallpaper">
+              Make wallpaper
+            </a>
+            <button type="button" className="btn btn-secondary" onClick={share} disabled={!layout}>
+              <Share size={18} aria-hidden="true" />
+              Share
+            </button>
+          </div>
         </div>
         <div className="stage-actions">
-          <button type="button" className="btn btn-on-dark" onClick={share} disabled={!layout}>
-            <Share size={18} aria-hidden="true" />
-            Share
-          </button>
           {target?.url && (
             <button type="button" className="btn btn-on-dark" onClick={copyLink}>
               {copied ? <Check size={18} aria-hidden="true" /> : <Copy size={18} aria-hidden="true" />}
@@ -275,27 +322,71 @@ export function SharePanel({
 
       <div className="controls">
         <Section title="When someone scans" flush>
-          <div className="group group-pad">
-            <Segmented
-              label="What the QR code does"
-              value={settings.qrMode}
-              onChange={(qrMode) => set({ qrMode })}
-              options={[
-                { value: 'page', label: 'Open my card', icon: <Smartphone size={16} aria-hidden="true" /> },
-                { value: 'vcard', label: 'Save contact', icon: <Contact size={16} aria-hidden="true" /> },
-              ]}
+          <div className="mode-options" role="radiogroup" aria-label="What the QR code does">
+            <ModeOption
+              selected={!page}
+              title="Straight to Contacts"
+              badge="Fastest"
+              detail="About 3 taps. Works offline. No photo."
+              onSelect={() => set({ qrMode: 'vcard' })}
             />
-            <p className="row-sub segment-note">
-              {page
-                ? 'Opens a page with your photo, details and links, plus a button to save your contact.'
-                : 'Their camera offers to add you to contacts. It works offline, but there’s no room for a photo or bio.'}
-            </p>
+            <ModeOption
+              selected={page}
+              title="Open my card page"
+              detail="About 4 taps. Shows your photo and every link."
+              onSelect={() => set({ qrMode: 'page' })}
+            />
           </div>
         </Section>
 
+        {!page && (
+          <Section title="In your contact" flush>
+            <div className="group">
+              <div className="row">
+                <span className="row-title">Name</span>
+                <span className="row-sub row-end">Always</span>
+              </div>
+              {contactFields(profile).map((f) => (
+                <Toggle
+                  key={f.key}
+                  label={f.label}
+                  description={f.description}
+                  checked={!hidden.includes(f.key)}
+                  onChange={(on) => toggleField(f.key, on)}
+                />
+              ))}
+            </div>
+            {layout && (
+              <div className="group">
+                <ReadabilityMeter layout={layout} tip="Turn off details people don’t need, and the code gets simpler." />
+              </div>
+            )}
+            {cardInContact && (
+              <div className="group group-pad">
+                <p className="row-sub">
+                  The card link opens <strong>{publishedCardUrl(site)}</strong>, which shows your published card.
+                </p>
+                <PublishPanel profile={profile} site={site} />
+              </div>
+            )}
+          </Section>
+        )}
+
         {page && (
-          <Section title="Link" flush>
+          <Section title="Your card link" flush>
             <div className="group group-pad">
+              {target?.url && (
+                <div className="url-box">
+                  <span className="url-text">{target.url}</span>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={copyLink}>
+                    {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
+                    Copy
+                  </button>
+                  <a className="icon-btn icon-btn-sm" href={target.url} target="_blank" rel="noopener noreferrer" aria-label="Open link">
+                    <ExternalLink size={16} />
+                  </a>
+                </div>
+              )}
               <Segmented
                 label="Link style"
                 value={settings.linkStyle}
@@ -308,19 +399,8 @@ export function SharePanel({
               <p className="row-sub segment-note">
                 {instant
                   ? 'Your details travel inside the link. There’s nothing to set up, but you need a new QR code after you edit your card.'
-                  : 'The link points to profile.json on your site. The code never changes, it’s easier to scan, and it can show an uploaded photo.'}
+                  : 'Short and never changes. Publish your card, and the same QR code shows every update.'}
               </p>
-              {target?.url && (
-                <div className="url-box">
-                  <span className="url-text">{target.url}</span>
-                  <button type="button" className="icon-btn icon-btn-sm" onClick={copyLink} aria-label="Copy link">
-                    {copied ? <Check size={16} /> : <Copy size={16} />}
-                  </button>
-                  <a className="icon-btn icon-btn-sm" href={target.url} target="_blank" rel="noopener noreferrer" aria-label="Open link">
-                    <ExternalLink size={16} />
-                  </a>
-                </div>
-              )}
               {!instant && <PublishPanel profile={profile} site={site} />}
             </div>
             {privateSite && (
@@ -388,7 +468,12 @@ export function SharePanel({
               checked={settings.centerPhoto}
               onChange={(centerPhoto) => set({ centerPhoto })}
             />
-            {layout && <ReadabilityMeter layout={layout} instant={instant} />}
+            {layout && page && (
+              <ReadabilityMeter
+                layout={layout}
+                tip={instant ? 'A shorter bio or fewer links makes a simpler code. A short link is always simple.' : 'Fewer links make a simpler code.'}
+              />
+            )}
           </div>
         </Section>
 

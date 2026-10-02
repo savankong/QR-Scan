@@ -2,16 +2,18 @@
 
 > **Work in progress.** See [HANDOFF.md](HANDOFF.md) for the current status, open decisions and next steps.
 
-A web app that turns your professional details into a QR code. Put the code on your phone's lock screen, or share it as a link or image. When someone scans it, they see your photo, title, contact details and links (LinkedIn, GitHub, website and more), with a button that saves you to their contacts.
+A web app that turns your professional details into a QR code. Put the code on your phone's lock screen, or share it as a link or image. Its main job: the person who scans it saves your contact in as few taps as possible.
+
+Visitors see your card at the site's address (`https://card.savankong.com/`). You edit it at `#/edit`.
 
 The app runs in the browser and needs no server or account. Your details are stored on your own device.
 
 ## What you can do
 
-- **Build your card.** Add a photo, your name, title, company, location, a short bio, email, phone and any number of links. A live preview shows what people see after they scan.
+- **Build your card.** The card page puts **Save to Contacts** first, then Call, Text and Email, your links, and a link that lets visitors text you their number. Add a photo, your name, title, company, location, a short bio, email, phone and any number of links. A live preview shows what people see after they scan.
 - **Make the QR code.** Choose what a scan does:
-  - **Open my card** opens your card page, with a *Save contact* button.
-  - **Save contact** puts a contact card (vCard) inside the code. Phones offer to add you to their contacts without going online.
+  - **Straight to Contacts** (the default, and the fastest) puts a contact card (vCard) inside the code. The camera offers to add you to contacts in about 3 taps, with no internet. A QR code has no room for a photo, so the contact includes a "My card" link to your card page. Switches under **In your contact** choose which details go in: fewer details make a simpler code.
+  - **Open my card page** opens your card page. Its first and largest button is **Save to Contacts**, which saves your photo too (about 4 taps).
 
   You can also pick the module style (rounded, square or dots), use your accent color or black, and put your photo in the middle of the code. A meter shows how easy the code is to scan.
 - **Make a wallpaper.** Choose your phone model, a gradient, a solid color or your own photo, and position the code below the lock-screen clock. Then save it at your phone's native resolution.
@@ -19,7 +21,7 @@ The app runs in the browser and needs no server or account. Your details are sto
 
 ## Instant links and short links
 
-With **Open my card**, the code holds one of two kinds of link:
+With **Open my card page**, the code holds one of two kinds of link:
 
 | | Instant link | Short link |
 |---|---|---|
@@ -37,6 +39,8 @@ For a wallpaper you'll keep for a while, use a short link:
 2. Put the file in this repository's `public/` folder. On GitHub, open `public`, choose **Add file → Upload files**, and commit.
 3. When the site redeploys (about a minute), the short link shows your card. Repeat these steps whenever you edit your card. The code doesn't change.
 
+The "My card" link inside a Straight to Contacts code opens the same address, so publish `profile.json` for that mode too.
+
 `profile.json` is public, like the card itself.
 
 ## Hosting on DigitalOcean
@@ -51,7 +55,7 @@ To connect the domain, add one DNS record for savankong.com at GoDaddy, where it
 
 | Type | Name | Value |
 |---|---|---|
-| CNAME | `card` | the app's default address, for example `qr-scan-xxxxx.ondigitalocean.app` |
+| CNAME | `card` | `qr-scan-dwcyv.ondigitalocean.app` (the app's default address) |
 
 DigitalOcean issues the HTTPS certificate once the record resolves. That usually takes a few minutes and can take up to an hour.
 
@@ -79,7 +83,7 @@ To test on your phone during development, run `npm run dev -- --host` and open t
 
 ```
 src/
-  App.tsx                  Routes: editor tabs, #/c/<data> (instant card), #/card (published card)
+  App.tsx                  Routes: published card at the root (#/card still works), #/edit and the other editor tabs, #/c/<data> (instant card)
   components/
     ProfileEditor.tsx      Photo, details, links and accent color
     ProfileCard.tsx        The page people see after they scan

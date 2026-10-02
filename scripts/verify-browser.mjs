@@ -4,7 +4,8 @@
 // Usage:
 //   npm run build && npx vite preview --port 4173 &
 //   npm i --no-save playwright && npx playwright install chromium
-//   node scripts/verify-browser.mjs   # BASE_URL=... to test another address
+//   node scripts/verify-browser.mjs   # BASE_URL=... to test another address,
+//                                     # CHROMIUM_PATH=... to use an installed Chromium
 //
 // Screenshots are written to .verify-shots/.
 import { chromium, devices } from 'playwright';
@@ -18,7 +19,8 @@ const BASE = process.env.BASE_URL ?? 'http://localhost:4173/';
 const JSQR = fs.readFileSync(path.join(ROOT, 'node_modules/jsqr/dist/jsQR.js'), 'utf8');
 fs.mkdirSync(OUT, { recursive: true });
 
-const browser = await chromium.launch();
+// CHROMIUM_PATH points at an installed Chromium when Playwright's own build is missing.
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
 const results = [];
 const errors = [];
 const check = (name, ok, detail = '') => results.push(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? `  (${detail})` : ''}`);
@@ -72,7 +74,7 @@ page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
 page.on('console', (m) => m.type() === 'error' && errors.push(`console: ${m.text()}`));
 
 // Profile
-await page.goto(BASE);
+await page.goto(`${BASE}#/edit`);
 await page.getByLabel('Name').fill('Savan Kong');
 await page.getByLabel('Title').fill('Software Engineer');
 await page.getByLabel('Company').fill('Acme Labs');
@@ -93,7 +95,24 @@ await page.screenshot({ path: `${OUT}/profile.png` });
 // QR tab
 await page.getByRole('link', { name: 'QR code', exact: true }).click();
 await page.waitForTimeout(600);
-await page.screenshot({ path: `${OUT}/qr.png` });
+await page.screenshot({ path: `${OUT}/qr.png`, fullPage: true });
+const vcard = await decodeCanvas(page, '.qr-canvas');
+check(
+  'Default QR saves the contact, with a card link',
+  typeof vcard === 'string' && vcard.startsWith('BEGIN:VCARD') && vcard.includes('FN:Savan Kong') && vcard.includes(`URL:${BASE}\r\nitem1.X-ABLabel:My card`),
+);
+await page.getByRole('switch', { name: 'Email' }).click();
+await page.waitForTimeout(200);
+const noEmail = await decodeCanvas(page, '.qr-canvas');
+check('Switching a field off removes it from the QR', typeof noEmail === 'string' && !noEmail.includes('EMAIL') && noEmail.includes('TEL'));
+await page.getByRole('switch', { name: 'Email' }).click();
+
+await page.getByRole('radio', { name: /Open my card page/ }).click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${OUT}/qr-page.png`, fullPage: true });
+check('Short link QR opens the site root', (await decodeCanvas(page, '.qr-canvas')) === BASE);
+await page.getByRole('radio', { name: 'Instant' }).click();
+await page.waitForTimeout(400);
 const instantUrl = await decodeCanvas(page, '.qr-canvas');
 check('Instant QR decodes to a card link', typeof instantUrl === 'string' && instantUrl.startsWith(`${BASE}#/c/`));
 for (const style of ['Square', 'Dots', 'Rounded']) {
@@ -105,17 +124,6 @@ await page.getByText('Photo in the middle').click();
 await page.waitForTimeout(400);
 check('Photo-in-middle QR decodes', (await decodeCanvas(page, '.qr-canvas')) === instantUrl);
 
-await page.getByRole('radio', { name: 'Save contact' }).click();
-await page.waitForTimeout(200);
-const vcard = await decodeCanvas(page, '.qr-canvas');
-check('vCard QR decodes', typeof vcard === 'string' && vcard.startsWith('BEGIN:VCARD') && vcard.includes('FN:Savan Kong'));
-
-await page.getByRole('radio', { name: 'Open my card' }).click();
-await page.getByRole('radio', { name: 'Short' }).click();
-await page.waitForTimeout(400);
-check('Short link QR decodes', (await decodeCanvas(page, '.qr-canvas')) === `${BASE}#/card`);
-await page.getByRole('radio', { name: 'Instant' }).click();
-await page.waitForTimeout(300);
 
 // Wallpaper tab
 await page.getByRole('link', { name: 'Wallpaper', exact: true }).click();
@@ -146,10 +154,27 @@ await visitor.goto(instantUrl);
 await visitor.waitForSelector('.pcard h1');
 check('Visitor page shows name', (await visitor.locator('.pcard h1').textContent()) === 'Savan Kong');
 check('Visitor page links LinkedIn', (await visitor.locator('a[href="https://www.linkedin.com/in/savan-kong"]').count()) === 1);
+check(
+  'Visitor page has Call, Text and Email',
+  (await visitor.locator('.pcard-actions a').allTextContents()).join(',') === 'Call,Text,Email',
+);
+check(
+  'Visitor page offers to text back',
+  (await visitor.locator('.pcard-textback').getAttribute('href'))?.startsWith('sms:+12065550142?&body=Hi%20Savan'),
+);
 await visitor.screenshot({ path: `${OUT}/visitor.png`, fullPage: true });
-const [download] = await Promise.all([visitor.waitForEvent('download'), visitor.getByRole('button', { name: 'Save contact' }).click()]);
+const [download] = await Promise.all([visitor.waitForEvent('download'), visitor.getByRole('button', { name: 'Save to Contacts' }).click()]);
 const vcf = fs.readFileSync(await download.path(), 'utf8');
-check('Save contact downloads a vCard', download.suggestedFilename() === 'Savan Kong.vcf' && vcf.includes('item1.X-ABLabel:LinkedIn'));
+check('Save to Contacts downloads a vCard', download.suggestedFilename() === 'Savan Kong.vcf' && vcf.includes('item1.X-ABLabel:LinkedIn'));
+await visitor.waitForSelector('.pcard-done');
+check('Saving shows the "Almost done" note', (await visitor.locator('.pcard-done').textContent()).includes('Create New Contact'));
+await visitor.screenshot({ path: `${OUT}/visitor-saved.png` });
+await visitor.goto(BASE);
+await visitor.waitForTimeout(400);
+check(
+  'Unpublished root offers the editor',
+  (await visitor.locator('.public-status').textContent()).includes('published') && (await visitor.locator('a[href="#/edit"]').count()) === 1,
+);
 await visitor.goto(`${BASE}#/c/zNOT-VALID`);
 await visitor.waitForTimeout(300);
 check('Broken link shows a friendly error', (await visitor.locator('.public-status').textContent()).includes('incomplete'));
@@ -158,7 +183,7 @@ check('Broken link shows a friendly error', (await visitor.locator('.public-stat
 const storage = await page.evaluate(() => JSON.stringify({ ...localStorage }));
 const desktop = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 const dpage = await desktop.newPage();
-await dpage.goto(BASE);
+await dpage.goto(`${BASE}#/edit`);
 await dpage.evaluate((s) => {
   for (const [k, v] of Object.entries(JSON.parse(s))) localStorage.setItem(k, v);
 }, storage);

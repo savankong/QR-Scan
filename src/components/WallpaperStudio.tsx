@@ -278,7 +278,7 @@ export function WallpaperStudio({
             <Slider label="Position" value={ws.y} min={0.2} max={0.85} step={0.01} onChange={(y) => set({ y })} format={(v) => `${Math.round(v * 100)}%`} />
             <div className="field">
               <label htmlFor="caption">Caption</label>
-              <input id="caption" value={ws.caption} maxLength={60} placeholder="Scan to connect" onChange={(e) => set({ caption: e.target.value })} />
+              <input id="caption" value={ws.caption} maxLength={60} placeholder="Scan to save my contact" onChange={(e) => set({ caption: e.target.value })} />
             </div>
           </div>
         </Section>
