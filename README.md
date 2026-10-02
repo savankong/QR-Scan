@@ -1,5 +1,7 @@
 # QR-Scan
 
+> **Work in progress.** See [HANDOFF.md](HANDOFF.md) for the current status, open decisions and next steps.
+
 A web app that turns your professional details into a QR code. Put the code on your phone's lock screen, or share it as a link or image. When someone scans it, they see your photo, title, contact details and links (LinkedIn, GitHub, website and more), with a button that saves you to their contacts.
 
 The app runs in the browser and needs no server or account. Your details are stored on your own device.

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Your QR code tab</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:#4338ca}a:hover{color:#312e81}
+</style>
+</helmet>
+<div style="width: 390px; height: 1120px; box-sizing: border-box; padding: 0 16px 32px; background: #f2f2f7; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', 'Helvetica Neue', sans-serif; color: #0b0b0f; display: flex; flex-direction: column">
+
+<h1 style="margin: 52px 4px 0; font-size: 32px; font-weight: 700; letter-spacing: -0.02em">QR code</h1>
+<p style="margin: 4px 4px 0; font-size: 15px; color: #44475a">Choose what happens when someone scans it.</p>
+
+<span style="margin: 22px 4px 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.03em; color: #44475a">WHEN SOMEONE SCANS</span>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<button type="button" style="display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 14px; border: 2px solid {{optA.border}}; background: #ffffff; text-align: left; font-family: inherit; cursor: pointer">
+<span style="flex: none; margin-top: 2px; width: 20px; height: 20px; box-sizing: border-box; border-radius: 50%; border: {{optA.ring}}"></span>
+<span style="display: flex; flex-direction: column; gap: 3px">
+<span style="display: flex; align-items: center; gap: 8px"><span style="font-size: 16px; font-weight: 600; color: #0b0b0f">Straight to Contacts</span><span style="padding: 2px 8px; border-radius: 999px; background: #dcfce7; color: #14532d; font-size: 12px; font-weight: 700">Fastest</span></span>
+<span style="font-size: 14px; line-height: 1.4; color: #44475a">About 3 taps. Works offline. No photo.</span>
+</span>
+</button>
+<button type="button" style="display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: 14px; border: 2px solid {{optB.border}}; background: #ffffff; text-align: left; font-family: inherit; cursor: pointer">
+<span style="flex: none; margin-top: 2px; width: 20px; height: 20px; box-sizing: border-box; border-radius: 50%; border: {{optB.ring}}"></span>
+<span style="display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 16px; font-weight: 600; color: #0b0b0f">Open my card page</span>
+<span style="font-size: 14px; line-height: 1.4; color: #44475a">About 4 taps. Shows your photo and every link.</span>
+</span>
+</button>
+</div>
+
+<div style="margin-top: 18px; padding: 18px 20px 16px; border-radius: 20px; background: #ffffff; display: flex; flex-direction: column; align-items: center; gap: 12px">
+<div style="align-self: stretch; display: flex; align-items: center; gap: 10px">
+<span style="flex: none; width: 40px; height: 40px; border-radius: 50%; background: #d4d6de; color: #44475a; font-size: 8px; font-weight: 600; display: flex; align-items: center; justify-content: center">[Photo]</span>
+<span style="display: flex; flex-direction: column"><span style="font-size: 16px; font-weight: 700">Savan Kong</span><span style="font-size: 13px; color: #44475a">[Your title] · [Company]</span></span>
+</div>
+<div style="width: 190px; height: 190px">
+<svg viewBox="-1 -1 27 27" style="display: block; width: 100%; height: 100%" aria-hidden="true"><rect x="-1" y="-1" width="27" height="27" fill="#ffffff"></rect><path fill="#1e1b4b" d="M9 0h1v1h-1zM11 0h2v1h-2zM15 0h1v1h-1zM8 1h2v1h-2zM12 1h1v1h-1zM14 1h2v1h-2zM10 2h1v1h-1zM12 2h3v1h-3zM16 2h1v1h-1zM8 3h1v1h-1zM11 3h2v1h-2zM15 3h1v1h-1zM9 4h3v1h-3zM13 4h1v1h-1zM16 4h1v1h-1zM8 5h1v1h-1zM10 5h1v1h-1zM14 5h2v1h-2zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM16 6h1v1h-1zM9 7h2v1h-2zM13 7h2v1h-2zM0 8h2v1h-2zM3 8h1v1h-1zM5 8h2v1h-2zM8 8h1v1h-1zM10 8h3v1h-3zM14 8h1v1h-1zM17 8h2v1h-2zM21 8h1v1h-1zM23 8h2v1h-2zM1 9h1v1h-1zM4 9h2v1h-2zM9 9h2v1h-2zM12 9h1v1h-1zM15 9h3v1h-3zM19 9h1v1h-1zM22 9h1v1h-1zM0 10h1v1h-1zM2 10h3v1h-3zM6 10h1v1h-1zM8 10h1v1h-1zM11 10h2v1h-2zM14 10h1v1h-1zM16 10h1v1h-1zM18 10h2v1h-2zM21 10h3v1h-3zM3 11h1v1h-1zM5 11h2v1h-2zM9 11h1v1h-1zM12 11h3v1h-3zM17 11h1v1h-1zM20 11h1v1h-1zM23 11h1v1h-1zM0 12h2v1h-2zM4 12h1v1h-1zM6 12h1v1h-1zM8 12h2v1h-2zM13 12h1v1h-1zM15 12h2v1h-2zM19 12h3v1h-3zM24 12h1v1h-1zM1 13h2v1h-2zM5 13h1v1h-1zM7 13h2v1h-2zM11 13h1v1h-1zM14 13h1v1h-1zM17 13h2v1h-2zM22 13h2v1h-2zM0 14h1v1h-1zM3 14h2v1h-2zM8 14h1v1h-1zM10 14h2v1h-2zM13 14h3v1h-3zM18 14h1v1h-1zM20 14h1v1h-1zM23 14h1v1h-1zM2 15h1v1h-1zM4 15h1v1h-1zM6 15h3v1h-3zM11 15h1v1h-1zM15 15h1v1h-1zM17 15h1v1h-1zM19 15h2v1h-2zM24 15h1v1h-1zM0 16h3v1h-3zM5 16h1v1h-1zM8 16h2v1h-2zM12 16h2v1h-2zM16 16h5v1h-5zM23 16h1v1h-1zM8 17h1v1h-1zM10 17h1v1h-1zM13 17h1v1h-1zM16 17h1v1h-1zM20 17h1v1h-1zM22 17h2v1h-2zM9 18h2v1h-2zM12 18h1v1h-1zM16 18h1v1h-1zM18 18h1v1h-1zM20 18h1v1h-1zM24 18h1v1h-1zM8 19h1v1h-1zM11 19h2v1h-2zM16 19h1v1h-1zM20 19h1v1h-1zM22 19h1v1h-1zM10 20h1v1h-1zM13 20h2v1h-2zM16 20h5v1h-5zM23 20h2v1h-2zM8 21h2v1h-2zM12 21h1v1h-1zM15 21h1v1h-1zM19 21h3v1h-3zM24 21h1v1h-1zM9 22h1v1h-1zM11 22h1v1h-1zM14 22h2v1h-2zM17 22h1v1h-1zM21 22h1v1h-1zM23 22h1v1h-1zM8 23h1v1h-1zM10 23h3v1h-3zM15 23h1v1h-1zM18 23h2v1h-2zM22 23h2v1h-2zM9 24h2v1h-2zM13 24h1v1h-1zM16 24h2v1h-2zM20 24h1v1h-1zM24 24h1v1h-1z"></path><rect x="0" y="0" width="7" height="7" rx="1.6" fill="#1e1b4b"></rect><rect x="1" y="1" width="5" height="5" rx="1" fill="#ffffff"></rect><rect x="2" y="2" width="3" height="3" rx="0.7" fill="#1e1b4b"></rect><rect x="18" y="0" width="7" height="7" rx="1.6" fill="#1e1b4b"></rect><rect x="19" y="1" width="5" height="5" rx="1" fill="#ffffff"></rect><rect x="20" y="2" width="3" height="3" rx="0.7" fill="#1e1b4b"></rect><rect x="0" y="18" width="7" height="7" rx="1.6" fill="#1e1b4b"></rect><rect x="1" y="19" width="5" height="5" rx="1" fill="#ffffff"></rect><rect x="2" y="20" width="3" height="3" rx="0.7" fill="#1e1b4b"></rect></svg>
+</div>
+<span style="display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: #2d3040">
+<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6M22 11h-6"></path></svg>
+{{caption}}
+</span>
+<div style="align-self: stretch; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 4px">
+<button type="button" style="height: 44px; border: 0; border-radius: 999px; background: {{accent}}; color: #ffffff; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer">Make wallpaper</button>
+<button type="button" style="height: 44px; border: 0; border-radius: 999px; background: #eceafd; color: #312e81; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer">Share</button>
+</div>
+</div>
+
+<sc-if value="{{contacts}}" hint-placeholder-val="{{ true }}">
+<span style="margin: 22px 4px 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.03em; color: #44475a">IN YOUR CONTACT</span>
+<div style="border-radius: 14px; background: #ffffff; display: flex; flex-direction: column; overflow: hidden">
+<div style="display: flex; align-items: center; justify-content: space-between; min-height: 46px; padding: 0 14px; border-bottom: 0.5px solid #d9dae0"><span style="font-size: 15px">Name</span><span style="font-size: 14px; color: #44475a">Always</span></div>
+<sc-for list="{{fields}}" as="f" hint-placeholder-count="6">
+<div style="display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 6px 14px; box-sizing: border-box; border-bottom: 0.5px solid #d9dae0">
+<span style="flex: 1; display: flex; flex-direction: column"><span style="font-size: 15px">{{f.label}}</span><sc-if value="{{f.hasNote}}" hint-placeholder-val="{{ false }}"><span style="font-size: 12px; color: #44475a">{{f.note}}</span></sc-if></span>
+<button type="button" role="switch" aria-checked="{{f.on}}" aria-label="{{f.label}}" style="flex: none; position: relative; width: 46px; height: 28px; border: 0; border-radius: 999px; background: {{f.track}}; cursor: pointer; padding: 0">
+<span style="position: absolute; top: 2px; left: {{f.knob}}; width: 24px; height: 24px; border-radius: 50%; background: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25)"></span>
+</button>
+</div>
+</sc-for>
+</div>
+<div style="margin-top: 12px; padding: 12px 14px; border-radius: 14px; background: #ffffff; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 15px; font-weight: 600">Easy to scan</span><span style="font-size: 13px; color: #44475a">Fewer details, simpler code</span></div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px">
+<span style="height: 6px; border-radius: 3px; background: #16a34a"></span>
+<span style="height: 6px; border-radius: 3px; background: #16a34a"></span>
+<span style="height: 6px; border-radius: 3px; background: #16a34a"></span>
+<span style="height: 6px; border-radius: 3px; background: #e4e5ea"></span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{page}}" hint-placeholder-val="{{ false }}">
+<span style="margin: 22px 4px 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.03em; color: #44475a">YOUR CARD LINK</span>
+<div style="display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-radius: 14px; background: #ffffff">
+<span style="flex: 1; font-size: 15px; color: #2d3040">card.savankong.com</span>
+<button type="button" style="height: 34px; padding: 0 14px; border: 0; border-radius: 999px; background: #eceafd; color: #312e81; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer">Copy</button>
+</div>
+<p style="margin: 8px 4px 0; font-size: 13px; line-height: 1.45; color: #44475a">Short and never changes. Edit your card any time and the same QR code shows the update.</p>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4f46e5","options":["#4f46e5","#0f766e","#be123c","#1d4ed8"]},"mode":{"editor":"enum","options":["Straight to Contacts","Card page"],"default":"Straight to Contacts"},"$preview":{"width":390,"height":1120}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#4f46e5';
+    const contacts = (this.props.mode ?? 'Straight to Contacts') === 'Straight to Contacts';
+    const option = (selected) => ({
+      border: selected ? accent : 'transparent',
+      ring: selected ? '6px solid ' + accent : '2px solid #b8bbc6',
+    });
+    const field = (label, on, note) => ({
+      label,
+      on: on ? 'true' : 'false',
+      track: on ? '#16a34a' : '#d9dae0',
+      knob: on ? '20px' : '2px',
+      note: note || '',
+      hasNote: !!note,
+    });
+    return {
+      accent,
+      contacts,
+      page: !contacts,
+      optA: option(contacts),
+      optB: option(!contacts),
+      caption: contacts ? 'Scan to save my contact' : 'Scan to see my card',
+      fields: [
+        field('Title and company', true),
+        field('Phone', true),
+        field('Email', true),
+        field('LinkedIn', true),
+        field('Website', true),
+        field('GitHub', false),
+        field('Link to my card page', true, 'So they can see your photo later'),
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
