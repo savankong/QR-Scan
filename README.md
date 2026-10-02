@@ -37,15 +37,23 @@ For a wallpaper you'll keep for a while, use a short link:
 
 `profile.json` is public, like the card itself.
 
-## Deploy to GitHub Pages
+## Hosting on DigitalOcean
 
-The QR code must point to an address other phones can open, so deploy the app before you print or set a wallpaper.
+The site runs on DigitalOcean App Platform as a free static site at **https://card.savankong.com**. The QR code must point to an address other phones can open, so deploy before you print or set a wallpaper.
 
-1. In the repository on GitHub, go to **Settings → Pages** and set **Source** to **GitHub Actions**.
-2. Push to `main`. The *Deploy to GitHub Pages* workflow builds the app and publishes it at `https://<your-user>.github.io/<repo>/`.
-3. Open that address on your phone. To install the app, use **Share → Add to Home Screen** on iPhone or **Install app** on Android.
+The app's settings live in [`.do/app.yaml`](.do/app.yaml). App Platform builds the site with `npm run build` and serves `dist/`. Every push to the deploy branch (`claude/qr-card-app` for now) deploys again automatically.
 
-GitHub Pages on a private repository needs a paid GitHub plan. You can also host the `dist/` folder on any static host, such as Netlify, Cloudflare Pages or Vercel. If the app runs somewhere other than its public address, set **Public address of this app** on the QR code tab.
+To create the app the first time, open **DigitalOcean → Apps → Create App**, choose GitHub and `savankong/QR-Scan`, and use the settings from `.do/app.yaml`. You can also run `doctl apps create --spec .do/app.yaml`.
+
+To connect the domain, add one DNS record for savankong.com at GoDaddy, where its DNS is hosted:
+
+| Type | Name | Value |
+|---|---|---|
+| CNAME | `card` | the app's default address, for example `qr-scan-xxxxx.ondigitalocean.app` |
+
+DigitalOcean issues the HTTPS certificate once the record resolves. That usually takes a few minutes and can take up to an hour.
+
+To install the app on your phone, open the site and use **Share → Add to Home Screen** on iPhone or **Install app** on Android. If you open the app somewhere other than its public address, set **Public address of this app** on the QR code tab.
 
 ## Set the wallpaper
 

@@ -153,8 +153,8 @@ describe('vCard', () => {
 
 describe('QR layout', () => {
   const texts = [
-    'https://savankong.github.io/qr-scan/#/card',
-    'https://savankong.github.io/qr-scan/#/c/' + 'z'.repeat(300),
+    'https://card.savankong.com/#/card',
+    'https://card.savankong.com/#/c/' + 'z'.repeat(300),
     buildVCard(sample(), { compact: true }),
   ];
 
@@ -169,7 +169,7 @@ describe('QR layout', () => {
   });
 
   it('decodes a real packed card link with a photo hole', async () => {
-    const url = 'https://savankong.github.io/qr-scan/#/c/' + (await packProfile(sample()));
+    const url = 'https://card.savankong.com/#/c/' + (await packProfile(sample()));
     expect(decode(layoutQr(url, { hole: true }))).toBe(url);
   });
 });
@@ -181,10 +181,11 @@ describe('colors and sites', () => {
   });
 
   it('normalizes and classifies site addresses', () => {
-    expect(normalizeSiteUrl('savankong.github.io/qr-scan')).toBe('https://savankong.github.io/qr-scan/');
+    expect(normalizeSiteUrl('card.savankong.com')).toBe('https://card.savankong.com/');
+    expect(normalizeSiteUrl('savankong.com/card')).toBe('https://savankong.com/card/');
     expect(normalizeSiteUrl('https://x.dev/app/index.html?a=1#x')).toBe('https://x.dev/app/');
     expect(isPrivateSite('http://localhost:5173/')).toBe(true);
     expect(isPrivateSite('http://192.168.1.4:5173/')).toBe(true);
-    expect(isPrivateSite('https://savankong.github.io/qr-scan/')).toBe(false);
+    expect(isPrivateSite('https://card.savankong.com/')).toBe(false);
   });
 });

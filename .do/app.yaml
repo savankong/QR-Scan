@@ -1,0 +1,18 @@
+# DigitalOcean App Platform spec for the QR Card site.
+# A static site: App Platform runs the build on every push to `branch`
+# and serves dist/ at card.savankong.com.
+name: qr-scan
+region: nyc
+domains:
+  - domain: card.savankong.com
+    type: PRIMARY
+static_sites:
+  - name: web
+    github:
+      repo: savankong/QR-Scan
+      branch: claude/qr-card-app
+      deploy_on_push: true
+    environment_slug: node-js
+    build_command: npm run build
+    output_dir: dist
+    catchall_document: index.html

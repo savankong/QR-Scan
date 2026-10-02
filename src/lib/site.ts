@@ -13,7 +13,7 @@ export function normalizeSiteUrl(value: string): string | null {
   }
 }
 
-/** The address this app is served from, e.g. https://you.github.io/qr-scan/. */
+/** The address this app is served from, e.g. https://card.savankong.com/. */
 export function currentSiteUrl(): string {
   return normalizeSiteUrl(window.location.origin + window.location.pathname) ?? window.location.origin + '/';
 }
